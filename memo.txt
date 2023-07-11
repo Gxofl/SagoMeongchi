@@ -1,0 +1,243 @@
+시작파일
+webapp/main.jsp
+
+-- 회원 테이블
+drop sequence memseq;
+
+create sequence memseq 
+increment by 1
+start with 1
+minvalue 0
+maxvalue 10000
+nocache;
+
+drop table members cascade constraints;
+
+create table members(
+	no number primary key,
+	name varchar2(30) not null,
+	id varchar2(10) not null,
+	password varchar2(12) not null,
+	birth varchar2(10) not null,
+	email varchar2(20),
+	hp1 varchar2(10) not null,
+	hp2 varchar2(10) not null, 
+	hp3 varchar2(20) not null,
+	address varchar2(100) not null
+);
+
+insert into members(no, name, id, password, birth, hp1, hp2, hp3, address)
+values(memseq.nextval, '관리자', 'admin', '1234', '012345', '011', '1234', '5678', '서울특별시 서교동');
+
+insert into members(no, name, id, password, birth, hp1, hp2, hp3, address)
+values(memseq.nextval, '태리', 'italy', '5678', '201024', '010', '2345', '9876' , '강원도 춘천시');
+
+col name for  a12
+col id for a12
+col password for a12
+col birth for a10
+col hp1 for a4
+col hp2 for a4
+col hp3 for a4
+col address for a20
+select no, name, id, password, birth, hp1, hp2, hp3, address from members ;
+
+--메인카테고리
+drop sequence maincatseq ;
+
+
+create sequence maincatseq
+increment by 1
+start with 1
+minvalue 1
+maxvalue 10000
+nocache;
+
+
+drop table maincategory purge ;
+create table maincategory(
+	mcnum number unique,
+	mcname varchar2(20) primary key
+);
+
+insert into maincategory values(maincatseq.nextval, '간식');
+insert into maincategory values(maincatseq.nextval, '의류');
+insert into maincategory values(maincatseq.nextval, '산책용품');
+insert into maincategory values(maincatseq.nextval, '생활용품');
+
+--서브카테고리
+
+drop sequence subcatseq ;
+
+create sequence subcatseq
+increment by 1
+start with 1
+minvalue 1
+maxvalue 10000
+nocache;
+
+drop table subcategory purge ;
+create table subcategory(
+	scnum 	number primary key,
+	supercname varchar2(20) references maincategory(mcname) on delete set null,
+	scname varchar(50) not null
+);
+
+insert into subcategory values(subcatseq.nextval, '간식', '수제간식');
+insert into subcategory values(subcatseq.nextval, '간식', '껌간식');
+insert into subcategory values(subcatseq.nextval, '간식', '음료');
+
+-- 카테고리 목록 조회 조인
+select mcnum, mcname, scnum, scname from maincategory left outer join subcategory
+on mcname = supercname order by mcnum, scnum;
+
+-- 상품
+drop sequence prodseq;
+
+create sequence prodseq 
+increment by 1
+start with 1
+minvalue 0
+maxvalue 10000
+nocache;
+
+drop table product cascade constraints;
+create table product(
+	pno number primary key,
+	pname varchar2(30) not null,
+	pcategory_fk varchar2(30) not null,
+	pspec varchar2(30),
+	pcompany varchar2(20),
+	pimage varchar2(100),
+	stock number default 0,
+	price number not null,
+	point number not null,
+	pcontents varchar2(300),
+	pinputdate varchar2(20)
+);
+
+col pname for a12
+col pcompany for a12
+col pimage for a12
+col pcontents for a12
+select * from product;
+
+	
+-- 주문
+drop sequence orderseq ;
+
+create sequence orderseq 
+increment by 1
+start with 1
+minvalue 0
+maxvalue 10000
+nocache;
+ 
+ 
+drop table orders cascade constraints purge ;
+  
+create table orders(
+	orderId number primary key, -- 주문번호(orderseq)
+	id varchar2(30),
+	memno number, -- 회원번호
+	pnum number, -- 상품번호
+	pname varchar2(100),
+	pimage varchar2(100),
+	price number,
+	qty number, -- 수량
+	amount number, -- 전체가격
+	orderdate varchar2(20) -- 주문일
+);
+
+-- 게시판
+drop table board cascade constraints;
+
+create table board( 
+	num number not null primary key,
+	writer varchar2(10) not null,
+	title varchar2(100) not null,
+	passwd varchar2(12) not null,
+	reg_date date not null,
+	readcount int default 0,
+	ref number not null,
+	re_step number not null,
+	re_level number not null,
+	content varchar2(1000) not null,
+	today date
+);
+
+drop sequence board_seq;
+create sequence board_seq
+  increment by 1
+  start with 1
+  minvalue 1
+  maxvalue 10000
+  nocache;
+  
+
+--아래 sql문은 답글까지 insert 한 것
+	
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'italy','재입고문의','1234','01-JAN-23',1,0,0,'내용1');
+
+
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'yumy34','사이즈문의','1234','04-JAN-23',2,0,0,'내용2');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'관리자','[답글] 사이즈문의','1234','05-JAN-23',2,4,1,'내용21');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'관리자','[답글] 사이즈문의2','1234','05-JAN-23',2,1,1,'내용22');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'yumy34','[답글][답글] 사이즈문의','1234','06-JAN-23',2,3,2,'내용221');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'관리자','[답글][답글] 사이즈문의2','1234','06-JAN-23',2,2,2,'내용222');
+
+
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content,readcount)
+values(board_seq.nextval,'rt645','수량문의','1234','06-JAN-23',7,0,0,'내용3',11);
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'관리자','[답글] 수량문의','1234','06-JAN-23',7,6,1,'내용31');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'관리자','[답글][답글] 수량문의','1234','07-JAN-23',7,7,2,'내용311');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'rt645','[답글] 수량문의2','1234','06-JAN-23',7,2,1,'내용32');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'관리자','[답글][답글] 수량문의2-1','1234','08-JAN-23',7,5,2,'내용321');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'qerw233','[답글][답글] 수량문의2-2','1234','09-JAN-23',7,3,2,'내용322');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'관리자','[답글][답글][답글] 수량문의2-2-1','1234','11-JAN-23',7,4,3,'내용3221');
+
+insert into board(num,writer,title,passwd,reg_date,ref,re_step,re_level,content)
+values(board_seq.nextval,'rt645','[답글] 수량문의 3','1234','14-JAN-23',7,1,1,'내용33');
+
+
+commit;
+
+-----------------------------
+주문내역 조회 조인
+select orderId, id, pnum, qty, amount from orders inner join members
+on memno = no order by orderId;
+
+   ORDERID 		ID		 PNUM		QTY		AMOUNT
+---------- ---------- ---------- ---------- ----------
+	 1 		italy	       3	  		1	  7800
+	 2 		italy	       8	  		1	  2300
+	 3 		italy	       3	  		1	  7800
+	 4 		italy	       5	  		1	 28000
+
+select o.orderId, m.id, p.pname, p.pimage, p.price, o.qty, o.amount 
+from (orders o inner join members m 
+on o.memno = m.no) inner join product p on o.pnum = p.pno order by orderId;
